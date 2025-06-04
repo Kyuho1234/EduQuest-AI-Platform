@@ -1,11 +1,10 @@
 {
-  "name": "EduQuest",
+  "name": "mmsgoogle",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate"
-    "build": "next build",
+    "build": "npx prisma generate&&next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "npx prisma generate"
