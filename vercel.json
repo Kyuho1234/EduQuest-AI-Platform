@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "app/api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "PRISMA_CLI_QUERY_ENGINE_TYPE": "binary",
+    "PRISMA_CLI_BINARY_TARGETS": "native,rhel-openssl-1.0.x"
+  }
+} 
