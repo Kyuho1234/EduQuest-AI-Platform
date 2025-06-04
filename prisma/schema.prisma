@@ -1,6 +1,8 @@
 // Prisma 클라이언트 생성 설정
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+  output = "../node_modules/.prisma/client"
 }
 
 // PostgreSQL 데이터베이스 연결 설정
