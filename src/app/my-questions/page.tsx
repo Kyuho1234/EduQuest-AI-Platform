@@ -42,7 +42,7 @@ export default function QuestionsPage() {
     if (status === 'authenticated' && session?.user?.id) {
       const fetchGrouped = async () => {
         try {
-          const res = await axios.get(`http://localhost:8000/api/get-questions/${session.user.id}`);
+          const res = await axios.get(`https://edubackend-production.up.railway.app/api/get-questions/${session.user.id}`);
           setGroupedQuestions(res.data.grouped_questions);
         } catch (err) {
           console.error('문제 그룹 조회 실패:', err);

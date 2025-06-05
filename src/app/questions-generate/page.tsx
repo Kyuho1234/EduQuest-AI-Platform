@@ -34,7 +34,7 @@ export default function Home() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [documentName, setDocumentName] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
-  const [isGenerating, setIsGenerating] = useState(false); // 🔹 추가
+  const [isGenerating, setIsGenerating] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -52,9 +52,9 @@ export default function Home() {
   }
 
   const handleDocumentSelected = async (documentId: string, documentName: string) => {
-    setIsGenerating(true); // 🔹 로딩 시작
+    setIsGenerating(true);
     try {
-      const res = await fetch('http://localhost:8000/api/generate-questions-from-document', {
+      const res = await fetch('https://edubackend-production.up.railway.app/api/generate-questions-from-document', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ document_id: documentId, user_id: session.user.id }),
@@ -85,7 +85,7 @@ export default function Home() {
         isClosable: true,
       });
     } finally {
-      setIsGenerating(false); // 🔹 로딩 종료
+      setIsGenerating(false);
     }
   };
 

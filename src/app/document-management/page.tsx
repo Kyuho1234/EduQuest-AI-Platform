@@ -35,19 +35,17 @@ export default function DocumentListPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [deleteMode, setDeleteMode] = useState(false); // 삭제모드 여부
+  const [deleteMode, setDeleteMode] = useState(false);
 
-  /* ───────────────────── 로그인 체크 ───────────────────── */
   useEffect(() => {
     if (status === 'unauthenticated') router.replace('/auth/signin');
   }, [status, router]);
 
-  /* ───────────────────── 문서 목록 조회 ───────────────────── */
   const fetchDocuments = async () => {
     if (!session?.user?.id) return;
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/documents/${session.user.id}`);
+      const res = await fetch(`https://edubackend-production.up.railway.app/api/documents/${session.user.id}`);
       const data = await res.json();
       setDocuments(data);
     } catch (e) {
@@ -55,7 +53,7 @@ export default function DocumentListPage() {
     } finally {
       setLoading(false);
       setSelected(new Set());
-      setDeleteMode(false); // 삭제모드 초기화
+      setDeleteMode(false);
     }
   };
 
@@ -63,7 +61,6 @@ export default function DocumentListPage() {
     if (status === 'authenticated') fetchDocuments();
   }, [status, session?.user?.id]);
 
-  /* ───────────────────── 업로드 ───────────────────── */
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -84,7 +81,7 @@ export default function DocumentListPage() {
 
     setUploading(true);
     try {
-      await axios.post('http://localhost:8000/api/upload-pdf', formData, {
+      await axios.post('https://edubackend-production.up.railway.app/api/upload-pdf', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       toast({ title: '업로드 성공', status: 'success' });
@@ -97,7 +94,6 @@ export default function DocumentListPage() {
     }
   };
 
-  /* ───────────────────── 체크 및 삭제 ───────────────────── */
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -113,7 +109,7 @@ export default function DocumentListPage() {
     try {
       await Promise.all(
         Array.from(selected).map((id) =>
-          axios.delete(`http://localhost:8000/api/documents/${id}`),
+          axios.delete(`https://edubackend-production.up.railway.app/api/documents/${id}`),
         ),
       );
       toast({ title: '삭제 완료', status: 'info' });
@@ -123,7 +119,6 @@ export default function DocumentListPage() {
     }
   };
 
-  /* ───────────────────── 로딩 상태 ───────────────────── */
   if (status === 'loading' || !session) {
     return (
       <Center h="100vh">
@@ -132,12 +127,10 @@ export default function DocumentListPage() {
     );
   }
 
-  /* ───────────────────── 렌더링 ───────────────────── */
   return (
     <Box maxW="container.md" mx="auto" py={10}>
       <Heading mb={4}>📄 학습자료 목록</Heading>
 
-      {/* 문서 목록 */}
       {loading ? (
         <Spinner />
       ) : documents.length === 0 ? (
@@ -151,7 +144,7 @@ export default function DocumentListPage() {
                   <Checkbox
                     isChecked={selected.has(doc.document_id)}
                     onChange={() => toggleSelect(doc.document_id)}
-                    mr={4} // 체크박스와 문서 간 간격
+                    mr={4}
                   />
                 ) : null}
 
@@ -167,7 +160,6 @@ export default function DocumentListPage() {
         </VStack>
       )}
 
-      {/* 상단 버튼 영역 */}
       <HStack justify="flex-end" mb={4}>
         <Box>
           <input
@@ -198,11 +190,10 @@ export default function DocumentListPage() {
           </>
         ) : (
           <Button colorScheme="teal" onClick={() => setDeleteMode(true)}>
-            삭제
+            삭제모드
           </Button>
         )}
       </HStack>
-
     </Box>
   );
 }
