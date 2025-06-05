@@ -716,4 +716,9 @@ async def generate_questions_from_context(data: Dict, db: Session = Depends(get_
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    import os
+    
+    # Render에서는 PORT 환경변수 사용
+    port = int(os.environ.get("PORT", 8000))
+    
+    uvicorn.run(app, host="0.0.0.0", port=port)
