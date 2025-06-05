@@ -48,7 +48,7 @@ export default function PDFUploader({ onUploadComplete }: PDFUploaderProps) {
     setIsUploading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/upload-pdf', formData, {
+      const response = await axios.post('https://edubackend-production.up.railway.app/api/upload-pdf', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -77,44 +77,39 @@ export default function PDFUploader({ onUploadComplete }: PDFUploaderProps) {
 
   return (
     <VStack spacing={6}>
-        {/* 제목 텍스트 */}
         <Heading size="lg" textAlign="center">
           PDF를 업로드하고 학습자료를 선택해주세요!
         </Heading>
 
-        {/* 업로드 UI 박스 */}
         <Box
-          p={10}                    // 내부 여백
-          bg="white"               // 배경 흰색
-          borderWidth={4}          // 테두리 두께
-          borderRadius="lg"        // 모서리 둥글게
-          borderStyle="dashed"     // 점선 테두리
-          borderColor="blue.200"   // 테두리 색상
-          textAlign="center"       // 텍스트 중앙 정렬
-          shadow="md"              // 그림자 효과
+          p={10}
+          bg="white"
+          borderWidth={4}
+          borderRadius="lg"
+          borderStyle="dashed"
+          borderColor="blue.200"
+          textAlign="center"
+          shadow="md"
         >
-          {/* 실제 파일 input은 숨기고, label로 감싼다 */}
           <input
             type="file"
-            accept=".pdf"                  // PDF만 허용
-            onChange={handleFileUpload}   // 파일 선택 시 이벤트 발생
-            style={{ display: 'none' }}   // 시각적으로 숨김
-            id="pdf-upload"               // label과 연결할 ID
+            accept=".pdf"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+            id="pdf-upload"
           />
 
-          {/* 라벨을 통해 숨긴 input을 클릭 가능하게 함 */}
           <label htmlFor="pdf-upload">
             <Button
-              as="span"                // label 내부에서 버튼처럼 보이게 하기 위함
-              colorScheme="blue"      // 파란색 버튼 스타일
-              isLoading={isUploading} // 업로드 중 로딩 스피너 표시
-              leftIcon={<Upload size={18} />} // 왼쪽에 Upload 아이콘 추가
+              as="span"
+              colorScheme="blue"
+              isLoading={isUploading}
+              leftIcon={<Upload size={18} />}
             >
               PDF 업로드
             </Button>
           </label>
 
-          {/* 안내 텍스트 */}
           <Text mt={4} color="gray.500">
             업로드된 문서는 서버에 저장되며, 추후 선택하여 문제를 생성할 수 있습니다.
           </Text>

@@ -23,7 +23,7 @@ export default function DocumentSelector({ userId, onSelect, refreshTrigger }: D
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/documents/${userId}`);
+        const res = await axios.get(`https://edubackend-production.up.railway.app/api/documents/${userId}`);
         setDocuments(res.data);
       } catch (error) {
         console.error('문서 목록 조회 실패', error);
