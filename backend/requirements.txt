@@ -1,3 +1,7 @@
+# Build tools
+setuptools>=65.0.0
+wheel>=0.37.0
+
 # Web Framework
 fastapi==0.103.2
 uvicorn[standard]==0.27.1
