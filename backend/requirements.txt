@@ -8,11 +8,16 @@ uvicorn[standard]==0.27.1
 python-multipart==0.0.9
 
 # AI/ML
-google-generativeai==0.3.2
 sentence-transformers==2.6.0
 torch==2.2.2
 numpy==1.24.4
 transformers==4.35.2
+
+# LangChain (agents/question_generator.py, agents/critic.py, agents/evaluator.py)
+langchain-core==0.3.45
+langchain-google-genai==2.1.0
+langchain-openai==0.3.9
+langchain-huggingface==0.1.2
 
 # PDF Processing
 PyPDF2==3.0.1
