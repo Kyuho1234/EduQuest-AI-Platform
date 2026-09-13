@@ -16,7 +16,10 @@ SessionRouting = sessionmaker(engine_routing, class_=AsyncSession, expire_on_com
 
 embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
 
-LIGHT_ROUTE_THRESHOLD = 0.85
+# main.py의 중복 문제 필터링(유사도 > 0.85면 아예 제거)과 겹치지 않도록 의도적으로 낮은 값을 씁니다.
+# Critic 단계에 도달하는 문제는 이미 기존 문제와의 유사도가 0.85 이하인 것들뿐이므로,
+# 그 안에서 "그래도 어느 정도 비슷한 패턴(0.6 이상)"과 "완전히 새로운 유형(0.6 미만)"을 나눕니다.
+LIGHT_ROUTE_THRESHOLD = 0.6
 
 
 async def get_routing_decision(question_text: str) -> dict:
