@@ -84,6 +84,7 @@ class Question(BaseDB2):
     type = Column(String)
     document_name = Column(String)
     created_at = Column(DateTime, server_default=func.now())
+    embedding = Column(Vector(768), nullable=True)  # 동적 라우팅(routing_service)의 유사도 비교용
 
 BaseDB1.metadata.create_all(bind=engine_db1)
 BaseDB2.metadata.create_all(bind=engine_db2)
@@ -645,6 +646,8 @@ class SaveQuestionsRequest(BaseModel):
 @app.post("/api/save-questions")
 async def save_questions(data: SaveQuestionsRequest, db: Session = Depends(get_db)):
     try:
+        from services.routing_service import embed_question
+
         for q in data.questions:
             db_question = Question(
                 user_id=data.user_id,
@@ -653,7 +656,8 @@ async def save_questions(data: SaveQuestionsRequest, db: Session = Depends(get_d
                 explanation=q.explanation,
                 options=q.options,
                 type=q.type,
-                document_name = q.document_name
+                document_name = q.document_name,
+                embedding=embed_question(q.question),
             )
             db.add(db_question)
         db.commit()

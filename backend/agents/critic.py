@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableParallel
 from .base import BaseAgent
+from services.routing_service import get_routing_decision
 
 
 class CriticVerdict(BaseModel):
@@ -51,11 +52,13 @@ class OpenRouterCriticAgent(BaseAgent):
             "당신은 교육 분야의 전문가이자 엄격한 평가자입니다."
         )
 
-        # 기존은 primary -> secondary를 순차 requests.post()로 호출했지만,
-        # RunnableParallel로 동시에 호출해서 지연시간을 줄입니다.
+        self.primary_chain = self.critic_prompt | self.primary_llm.with_structured_output(CriticVerdict)
+        self.secondary_chain = self.critic_prompt | self.secondary_llm.with_structured_output(CriticVerdict)
+
+        # 무거운 경로: 두 모델을 동시에 호출해서 교차 검증
         self.dual_chain = RunnableParallel(
-            primary=self.critic_prompt | self.primary_llm.with_structured_output(CriticVerdict),
-            secondary=self.critic_prompt | self.secondary_llm.with_structured_output(CriticVerdict),
+            primary=self.primary_chain,
+            secondary=self.secondary_chain,
         )
 
     async def execute_function(self, function_name: str, arguments: Dict[str, Any]) -> Any:
@@ -77,11 +80,22 @@ class OpenRouterCriticAgent(BaseAgent):
                     "correct_answer": question["correct_answer"],
                     "explanation": question["explanation"],
                 }
-                result = await self.dual_chain.ainvoke(inputs)
-                primary: CriticVerdict = result["primary"]
-                secondary: CriticVerdict = result["secondary"]
 
-                dual_verified = primary.passed and secondary.passed
+                # 벡터 DB 유사도 기반 동적 라우팅:
+                # 이미 검증 통과한 과거 문제와 유사도가 높으면(light) 단일 모델만으로 검증하고,
+                # 새로운 유형이거나 유사도가 낮으면(heavy) 기존처럼 이중 모델 교차 검증을 거친다.
+                routing = await get_routing_decision(question["question"])
+
+                if routing["route"] == "light":
+                    primary: CriticVerdict = await self.primary_chain.ainvoke(inputs)
+                    dual_verified = primary.passed
+                    secondary_dump = None
+                else:
+                    result = await self.dual_chain.ainvoke(inputs)
+                    primary: CriticVerdict = result["primary"]
+                    secondary: CriticVerdict = result["secondary"]
+                    dual_verified = primary.passed and secondary.passed
+                    secondary_dump = secondary.model_dump()
 
                 if dual_verified:
                     verification = {
@@ -104,7 +118,7 @@ class OpenRouterCriticAgent(BaseAgent):
                         "reference_check": {
                             "result": "아니오",
                             "evidence": "검증 불일치",
-                            "issues": ["모델 간 검증 결과 불일치"],
+                            "issues": ["모델 간 검증 결과 불일치"] if routing["route"] == "heavy" else ["단일 모델 검증 실패"],
                         },
                         "quality_assessment": {
                             "grade": "부적절",
@@ -113,7 +127,7 @@ class OpenRouterCriticAgent(BaseAgent):
                             "improvement_suggestions": ["문제 재검토 필요"],
                         },
                         "passed": False,
-                        "feedback": "두 모델의 검증 결과가 불일치하여 문제가 탈락되었습니다.",
+                        "feedback": "검증 기준을 통과하지 못해 문제가 탈락되었습니다.",
                     }
 
                 verified_questions.append(
@@ -122,9 +136,10 @@ class OpenRouterCriticAgent(BaseAgent):
                         "verification": verification,
                         "verification_details": {
                             "primary": primary.model_dump(),
-                            "secondary": secondary.model_dump(),
+                            "secondary": secondary_dump,
                             "dual_verified": dual_verified,
                         },
+                        "routing": routing,
                     }
                 )
 
@@ -148,6 +163,7 @@ class OpenRouterCriticAgent(BaseAgent):
                             "passed": False,
                             "feedback": f"검증 중 오류가 발생했습니다: {str(e)}",
                         },
+                        "routing": {"route": "heavy", "reason": "오류로 인한 기본값", "similarity": None},
                     }
                 )
 
