@@ -107,13 +107,17 @@ def get_db():
 async def rag_answer(data: Dict):
     """
     질문을 받아 RAG 기반으로 답변 생성
+    document_id를 주면 해당 업로드 문서 안에서만 검색한다.
     """
     try:
         question = data.get("question")
         if not question:
             raise HTTPException(status_code=400, detail="question 필드가 필요합니다.")
 
-        answer = await answer_with_rag(question)
+        document_id = data.get("document_id")
+        user_id = data.get("user_id")
+
+        answer = await answer_with_rag(question, document_id=document_id, user_id=user_id)
         return {
             "success": True,
             "question": question,
