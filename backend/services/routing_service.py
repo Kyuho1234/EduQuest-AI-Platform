@@ -22,13 +22,17 @@ embeddings = HuggingFaceEmbeddings(model_name="jhgan/ko-sroberta-multitask")
 LIGHT_ROUTE_THRESHOLD = 0.6
 
 
-async def get_routing_decision(question_text: str) -> dict:
+async def get_routing_decision(question_text: str, user_id: str = None) -> dict:
     query_vec = embeddings.embed_query(question_text)
 
     async with SessionRouting() as session:
+        conditions = [Question.embedding.isnot(None)]
+        if user_id is not None:
+            conditions.append(Question.user_id == user_id)
+
         stmt = (
             select(Question, Question.embedding.cosine_distance(query_vec).label("distance"))
-            .where(Question.embedding.isnot(None))
+            .where(*conditions)
             .order_by("distance")
             .limit(1)
         )
@@ -36,7 +40,7 @@ async def get_routing_decision(question_text: str) -> dict:
         row = result.first()
 
     if row is None:
-        return {"route": "heavy", "reason": "검증된 과거 문제가 아직 없음", "similarity": None}
+        return {"route": "heavy", "reason": "본인이 검증 통과한 과거 문제가 아직 없음", "similarity": None}
 
     _, distance = row
     similarity = 1 - distance
@@ -44,13 +48,13 @@ async def get_routing_decision(question_text: str) -> dict:
     if similarity >= LIGHT_ROUTE_THRESHOLD:
         return {
             "route": "light",
-            "reason": "기존에 검증 통과한 문제와 유사도가 높음",
+            "reason": "본인이 이미 검증 통과한 문제와 유사도가 높음",
             "similarity": similarity,
         }
 
     return {
         "route": "heavy",
-        "reason": "새로운 유형이거나 기존 검증 사례와 유사도가 낮음",
+        "reason": "새로운 유형이거나 본인의 기존 검증 사례와 유사도가 낮음",
         "similarity": similarity,
     }
 

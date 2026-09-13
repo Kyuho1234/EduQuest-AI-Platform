@@ -64,11 +64,13 @@ class OpenRouterCriticAgent(BaseAgent):
     async def execute_function(self, function_name: str, arguments: Dict[str, Any]) -> Any:
         if function_name == "verify_questions":
             return await self.verify_questions(
-                questions=arguments["questions"], context=arguments["context"]
+                questions=arguments["questions"],
+                context=arguments["context"],
+                user_id=arguments.get("user_id"),
             )
         raise ValueError(f"Unknown function: {function_name}")
 
-    async def verify_questions(self, questions: List[Dict], context: str) -> List[Dict]:
+    async def verify_questions(self, questions: List[Dict], context: str, user_id: str = None) -> List[Dict]:
         verified_questions = []
 
         for question in questions:
@@ -84,7 +86,7 @@ class OpenRouterCriticAgent(BaseAgent):
                 # 벡터 DB 유사도 기반 동적 라우팅:
                 # 이미 검증 통과한 과거 문제와 유사도가 높으면(light) 단일 모델만으로 검증하고,
                 # 새로운 유형이거나 유사도가 낮으면(heavy) 기존처럼 이중 모델 교차 검증을 거친다.
-                routing = await get_routing_decision(question["question"])
+                routing = await get_routing_decision(question["question"], user_id)
 
                 if routing["route"] == "light":
                     primary: CriticVerdict = await self.primary_chain.ainvoke(inputs)

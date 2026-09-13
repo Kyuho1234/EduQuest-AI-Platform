@@ -198,7 +198,7 @@ def create_overlapping_chunks(text: str, chunk_size: int = 450, overlap: int = 1
     
     return chunks
 
-async def verify_questions_with_rag_and_critic(questions: List[Dict], context: str) -> Dict:
+async def verify_questions_with_rag_and_critic(questions: List[Dict], context: str, user_id: str) -> Dict:
     """RAG와 Critic을 통합한 효율적인 검증 프로세스"""
     try:
         # 1. 텍스트를 청크로 분할
@@ -284,7 +284,8 @@ async def verify_questions_with_rag_and_critic(questions: List[Dict], context: s
                     "name": "verify_questions",
                     "arguments": {
                         "questions": rag_filtered_questions,
-                        "context": context
+                        "context": context,
+                        "user_id": user_id
                     }
                 }
             }
@@ -412,7 +413,7 @@ async def generate_questions_from_document(data: Dict, db: Session = Depends(get
     print("\n=== 유사 문제 필터링 완료 ===\n")
 
     # 4. RAG 및 Critic 기반 문제 검증
-    verification_result = await verify_questions_with_rag_and_critic(filtered_questions, text)
+    verification_result = await verify_questions_with_rag_and_critic(filtered_questions, text, user_id)
     print(f"[DEBUG] 검증 결과: {json.dumps(verification_result, ensure_ascii=False, indent=2)}")
 
     # 5. 응답 구조화
